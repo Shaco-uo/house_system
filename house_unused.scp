@@ -26,14 +26,34 @@ ref1=<uid>
 ref2=<region.uid>
 if !(<ref2.isvalid>)
 elif (<ref2.housetype>!=<def.house_public>)
+elif !(<isempty <ref2.tag.visitor_<ref1>>>)
 elif (<ref2.isowner <ref1>> || <ref1.isgm>)
 elif (<ref2.GetCoownerPos <ref1>> >= 0 || <ref2.GetFriendPos <ref1>> >= 0)
 elif (<ref2.GetBanPos <ref1>> >= 0 || <ref2.GetAccessPos <ref1>> >= 0)
 else
 	ref2.more2 ++
+	ref2.tag.visitor_<ref1>
+	serv.newitem=i_mem_hsvisitor
+	new.more2=<ref1>
+	new.link=<ref2>
+	new.p=<ref2.p>
 endif
 
-[FUNCTION f_house_item_flip2] // unused function?
+[itemdef i_mem_hsvisitor]
+id=i_gold
+type=t_script
+on=@Create
+	attr=090
+on=@Timer
+	ref1=(<link>)
+	if (<ref1.isvalid>)
+		ref1.tag.visitor_<more2>=
+	endif
+	remove
+	return 1
+
+
+[FUNCTION f_house_item_flip2]
 if !(<argo> && <argo.isitem>)
 	src.sysmessage @33,,1 Invalid Target.
 	return 1
