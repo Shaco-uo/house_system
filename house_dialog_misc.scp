@@ -1,0 +1,400 @@
+//****************************************************************************
+// SphereServer by: SphereServer development team and Menasoft.
+// www.sphereserver.net
+//****************************************************************************
+VERSION=X1
+
+[DIALOG d_house_forsale]
+100,100
+page 0
+ref1=<src.ctag0.hs_sign> // sign
+ref2=<ref1.link>
+
+f_house_dialog 100,206,428,250
+dorigin 372 220
+gumppic - - 100 // brass sign gump
+dhtmlgump +18 *16 108 20 0 0 <def.bfont_hs_red><def.center><def.bfont_size7><def.h3>FOR SALE
+dhtmlgump +18 *18 108 60 0 0 <def.center><def.h3><def.bfont_size7><ref2.name>
+if <ref2.dmore2>
+	dhtmlgump - *70 146 20 0 0 <def.bfont_hs_text1><def.center>Visit Count <def.bfont_hs_text2><f_numformat <ref2.dmore2>>
+endif
+dorigin 120 224
+dhtmlgump - - 242 20 0 0 <def.bfont_hs_text1>Owned By <def.bfont_hs_title><ref2.owner.name>
+dhtmlgump - *26 180 20 0 0 <def.bfont_hs_text3>House Value
+dhtmlgump +168 - 180 20 0 0 <def.bfont_hs_text2><f_numformat <eval((<ref2.value>+<ref2.dtag0.boughtstorage>)+<ref2.dtag0.construction>)>><def.bfont_hs_text3> gp
+dhtmlgump - *20 180 20 0 0 <def.bfont_hs_text3>List Price
+dhtmlgump +168 - 120 20 0 0 <def.bfont_hs_text1><f_numformat <ref2.value>><def.bfont_hs_text3> gp
+if <ref2.increasedstorage>
+	dhtmlgump - *20 180 20 0 0 <def.bfont_hs_text3>Increased Storage
+	dhtmlgump +168 - 180 20 0 0 <def.bfont_hs_text1><ref2.increasedstorage>%
+endif
+dhtmlgump - *20 180 20 0 0 <def.bfont_hs_text3>Maximum Lockdowns
+dhtmlgump +168 - 180 20 0 0 <def.bfont_hs_text1><QVAL (<def.hs_hs_secure_locks_limit>)?<ref2.maxlockdowns>:Unlimited>
+dhtmlgump - *20 180 20 0 0 <def.bfont_hs_text3>Maximum Storage
+dhtmlgump +168 - 180 20 0 0 <def.bfont_hs_text1><QVAL (<def.hs_hs_secure_locks_limit>)? <ref2.maxstorage>:Unlimited>
+dhtmlgump - *20 180 20 0 0 <def.bfont_hs_text3>Maximum Vendors
+dhtmlgump +168 - 180 20 0 0 <def.bfont_hs_text1><QVAL (<def.hs_hs_secure_locks_limit>)? <ref2.maxvendors>:Unlimited>
+if <def.hs_can_decay>
+	dhtmlgump - *30 370 40 0 0 <def.bfont_hs_text3>This house <QVAL (<ref2.tag0.demolition>)? will be demolished:will decay> in <def.bfont_hs_text1><f_time_format <ref1.timer>>
+endif
+if <ref2.isowner <src>>
+	dhtmlgump *94 *30 250 20 0 0 <def.bfont_hs_gray>Buy this house for <f_numformat <ref2.dtag0.price>> gp
+else
+	dhtmlgump *120 *30 250 20 0 0 <def.bfont_hs_text1>Buy this house for <def.bfont_hs_text2><f_numformat <ref2.dtag0.price>><def.bfont_hs_text1> gp
+	button -37 - 4005 4007 1 0 1
+endif
+
+[DIALOG d_house_forsale prebutton]
+src.dialogclose d_house_forsale
+
+[DIALOG d_house_forsale button]
+ON=1
+	ref1=<src.ctag0.hs_sign> // sign
+	ref2=<ref1.link>
+	ref3=<ref2.owner>
+	local.total=<ref2.dtag0.price>
+	if (<src.isgm>)
+		local.gm=1
+		call f_dialog_housesale
+	elif (<src.gold> < <dlocal.total>)
+		src.sysmessage @33,,1 You lack the funds to purchase this property.
+		sdialog d_house_forsale
+	elif (<src.houses> >= <serv.MaxHousesAccount>)
+		src.sysmessage @33,,1 You already own the maximum number of houses permitable.
+		sdialog d_house_forsale
+	else
+		call f_dialog_housesale
+	endif
+
+[FUNCTION f_dialog_housesale]
+if (<local.gm>)
+	src.gold -= <dlocal.total>
+endif
+if (strmatch(*Britannic Realtors*, <ref3.name>))
+	ref2.owner <src>
+	ref3.remove
+	if <def.hs_can_decay>
+		ref1.timer = 60*60*24*<ddef0.hs_can_decay>
+	endif
+else
+	if <ref3.isplayer>
+		ref2.owner <src>
+		if !(<local.gm>)
+			ref3.gold += <dlocal.total>
+			if <ref3.isonline>
+				ref3.sysmessage @53,,1 Your house has been sold, <f_numformat <dlocal.total>> gp has been deposited in your bank box.
+				ref3.sysmessage @1151,,1 The number of houses you own is now <ref3.houses>.
+			endif
+		else
+			if <ref3.isonline>
+				ref3.sysmessage @1151,,1 Your house has been transfered by GM <src.name>.
+				ref3.sysmessage @1151,,1 The number of houses you own is now <ref3.houses>.
+			endif
+		endif
+	endif
+endif
+ref2.tag.forsale=
+ref2.tag.price=
+ref2.tag.lasttransfer=<f_return_todate <serv.rtime>>
+ref1.resendtooltip 1,0
+src.sysmessage @,,1 You are now the owner of this property.
+src.sysmessage @,,1 This house is currently set to public (shop setting)
+src.sysmessage @,,1 Do not forget to change the settings to your preferences.
+src.sysmessage @,,1 The number of houses you own is now <src.houses>.
+
+
+[DIALOG d_house_visitor]
+100,100
+ref1=<src.ctag0.hs_sign>
+ref2=<ref1.link>
+gumppic  100 100 100
+if (<ref2.housetype>==<def.house_guild>)
+	ref5=<ref2.tag0.is_guild>
+	if <ref5.isvalid>
+		dhtmlgump 110 112 124 20 0 0 <def.center><qval <isempty <ref5.abbrev>>?<def.bfont_size1><ref5.name>:[<ref5.abbrev>]>
+	endif
+endif
+dhtmlgump 110 130 124 60 0 0 <def.center><def.h3><def.bfont_size7><ref2.name>
+
+
+[DIALOG d_house_secure]
+100,100
+ref1=<src.ctag0.hs_sign> // sign
+ref2=<ref1.link> // house
+ref3=<src.ctag0.secure> // item
+local.housetype=<ref2.housetype>
+f_house_dialog 100,100,200,180
+gumppictiled 104 130 190 5 5058  // top line
+checkertrans 104 130 190 5
+button 276 110 22150 22152 1 0 0 // exit
+dhtmlgump 114 110 176 20 0 0 <def.center><def.bfont_hs_title><ref3.name>
+dhtmlgump 114 141 176 20 0 0 <def.bfont_hs_text1>Owned by <def.bfont_hs_yellow><ref2.owner.name>
+
+dorigin 170 170
+dhtmlgump - - 180 20 0 0 <qval (<ref3.tag0.access>==<def.house_access_owner>)?<def.bfont_hs_text2>:<def.bfont_hs_text1>>Owner Only
+button -37 - <qval (<ref3.tag0.access>==<def.house_access_owner>)? 4006 4006 0 0:4005 4007 1 0> 1
+dhtmlgump - *20 180 20 0 0 <qval (<ref3.tag0.access>==<def.house_access_coowner>)?<def.bfont_hs_text2>:<def.bfont_hs_text1>>Co-owners
+button -37 - <qval (<ref3.tag0.access>==<def.house_access_coowner>)? 4006 4006 0 0:4005 4007 1 0> 2
+dhtmlgump - *20 180 20 0 0 <qval (<ref3.tag0.access>==<def.house_access_friend>)?<def.bfont_hs_text2>:<def.bfont_hs_text1>>Friends
+button -37 - <qval (<ref3.tag0.access>==<def.house_access_friend>)? 4006 4006 0 0:4005 4007 1 0> 3
+dhtmlgump - *20 180 20 0 0 <qval (<local.housetype>==<def.house_guild>)?<qval (<ref3.tag0.access>==<def.house_access_guild>)?<def.bfont_hs_text2>:<def.bfont_hs_text1>>:<def.bfont_hs_gray>>Guild Members
+if (<local.housetype>==<def.house_guild>)
+	button -37 - <qval (<ref3.tag0.access>==<def.house_access_guild>)? 4006 4006 0 0:4005 4007 1 0> 4
+endif
+dhtmlgump - *20 180 20 0 0 <qval (<ref3.tag0.access>==<def.house_access_all>)?<def.bfont_hs_text2>:<def.bfont_hs_text1>>Anyone
+button -37 - <qval (<ref3.tag0.access>==<def.house_access_all>)? 4006 4006 0 0:4005 4007 1 0> 5
+
+[DIALOG d_house_secure prebutton]
+ref1=<src.ctag0.hs_sign> // sign
+ref2=<ref1.link> // house
+ref3=<src.ctag0.secure> // item
+src.dialogclose d_house_secure
+if <argn1>==0
+elif !(<ref1.isvalid> && <ref2.isvalid> && <ref3.isvalid>)
+	return 1
+elif (<ref3.region.uid>!=<ref1.region.uid>)
+	return 1
+elif (<ref3.f_isContainer>)
+	if !(<ref3.isevent.ei_house_secure>)
+		return 1
+	endif
+endif
+
+[DIALOG d_house_secure button]
+ON=0
+	sysmessage @,,2 1061281 // Access level unchanged.
+	if !<isempty <src.ctag.hs_menu>>
+		sdialog d_house_menu
+	endif
+ON=1 5
+	ref1=<src.ctag0.hs_sign> // sign
+	ref2=<ref1.link> // house
+	ref3=<src.ctag0.secure> // item
+	doswitch <eval <argn1>-1>
+		ref3.tag.access = <def.house_access_owner>
+		ref3.tag.access = <def.house_access_coowner>
+		ref3.tag.access = <def.house_access_friend>
+		ref3.tag.access = <def.house_access_guild>
+		ref3.tag.access = <def.house_access_all>
+	enddo
+	doswitch <eval <argn1>-1>
+		src.sysmessage @1151,,1 Only the Owner may now open this <ref3.name>.
+		src.sysmessage @1151,,1 Owner & Co-owners may now open this <ref3.name>.
+		src.sysmessage @1151,,1 Owner, Co-owners & Friends of the house may now open this <ref3.name>.
+		src.sysmessage @1151,,1 Only guild members may now open this <ref3.name>.
+		src.sysmessage @42,,1 Everyone can open <ref3.name> now.
+	enddo
+	ref3.resendtooltip 1,0
+	sdialog d_house_secure
+
+
+
+[DIALOG d_house_commands]
+100,100
+page 0
+local.max=<qval <def.hs_can_bank>?12:11>
+f_house_dialog 100,100,440,38
+button 516 110 22150 22152 1 0 0 // exit
+dhtmlgump 110 112 422 20 0 0 <def.bfont_hs_title><def.center>HOUSE VERBAL COMMANDS
+f_house_dialog 100,138,440,300
+dorigin 150 154
+dhtmlgump - - 120 20 0 0 <def.bfont_hs_yellow>COMMAND
+dhtmlgump *120 - 274 20 0 0 <def.bfont_hs_yellow>DESCRIPTION
+dorigin 114 156
+for 1 <dlocal.max>
+	args=<def0.hs_speech_command_<dlocal._for>>
+	button - *21 4005 4007 1 0 <dlocal._for>
+	dhtmlgump +37 - 120 20 0 0 <def.bfont_hs_text1><argv[0]>
+	dhtmlgump +157 - 274 20 0 0 <def.bfont_hs_text3><argv[1]>.
+endfor
+
+[DIALOG d_house_commands button]
+src.dialogclose d_house_commands
+
+[DIALOG d_house_commands button]
+on=1 12
+	ref1=<src.region.uid>
+	if <dargn1>==3 // secure
+		if !(<ref1.isowner <src>> || <ref1.GetCoownerPos <src>> >= 0 || <src.isgm>)
+			return 1
+		endif
+	else
+		if !(<ref1.isowner <src>> || <ref1.GetCoownerPos <src>> >= 0 || <ref1.GetFriendPos <src>> >= 0 || <src.isgm>)
+			return 1
+		endif
+	endif
+	args=<def0.hs_speech_command_<dargn1>>
+	src.message @1151,,1 <argv[0]>
+	if !<isempty <argv[4]>>
+		src.message @,,1 <argv[4]>
+	endif
+	if <argv[3]>==1
+		src.targetf <argv[2]>
+	else
+		src.<argv[2]>
+	endif
+	sdialog d_house_commands
+
+
+
+
+[DIALOG d_house_interior_decorator]
+150,50
+resizepic 0 12 2600 190 190
+button 52 45 2152 2154 1 0 1
+dhtmlgump 90 50 70 40 0 0 <def.bfont_size7><def.h3>Flip
+button 52 95 2152 2154 1 0 2
+dhtmlgump 90 100 70 40 0 0 <def.bfont_size7><def.h3>Up
+button 52 145 2152 2154 1 0 3
+dhtmlgump 90 150 70 40 0 0 <def.bfont_size7><def.h3>Down
+
+[DIALOG d_house_interior_decorator BUTTON]
+ON=1 3
+	tag.mode=<dargn1>
+	dclick
+
+
+
+
+[DIALOG d_house_placement_tool]
+50,50
+if !(<src.isgm>) && (<def0.hs_placement_delay>) && (<src.dtag0.House_PlacementDelay> > <serv.time>)
+	local.x = 306
+	local.y = 266
+else
+	local.x = 250
+	local.y = 126
+endif
+f_house_dialog 0,3,<eval(<local.x>+12)>,<eval(<local.y>+13)>
+button <eval(<local.x>-12)> 14 22150 22152 1 0 0    // close/cancel
+dhtmlgump 10 15 <local.x> 20 0 0 <def.bfont_hs_title><def.center>HOUSE PLACEMENT TOOL
+
+dorigin 45 43
+gumppictiled 4 40 <eval(<local.x>+3)> 28 <eval(<def.dialog_hs_bg>+4)>
+checkertrans 4 40 <eval(<local.x>+3)> 28
+dhtmlgump 45 45 280 20 0 0 <def.bfont_hs_text1>Classic Houses
+button 10 42 4005 4007 1 0 1
+
+gumppictiled 4 70 <eval(<local.x>+3)> 28 <eval(<def.dialog_hs_bg>+4)>
+checkertrans 4 70 <eval(<local.x>+3)> 28
+dhtmlgump 45 75 280 20 0 0 <def.bfont_hs_text1>2-Story Customizable Houses
+button 10 72 4005 4007 1 0 2
+
+gumppictiled 4 100 <eval(<local.x>+3)> 28 <eval(<def.dialog_hs_bg>+4)>
+checkertrans 4 100 <eval(<local.x>+3)> 28
+dhtmlgump 45 105 280 20 0 0 <def.bfont_hs_text1>3-Story Customizable Houses
+button 10 102 4005 4007 1 0 3
+
+if !(<src.isgm>) && (<def0.hs_placement_delay>) && (<src.dtag0.House_PlacementDelay> > <serv.time>)
+	dorigin 14 140
+	local.day_name = days
+	resizepic -4 -3 3000 298 134
+	dhtmlgump - - 290 130 0 0 You are currently unable to place a new house or receive a house in trade because you have become the owner of a house within the last<def.br><ddef0.hs_placement_delay> <local.day_name>.<def.br>You can test for house placement right now, but you cannot currently create a permanent house.
+endif
+
+[DIALOG d_house_placement_tool BUTTON]
+ON=1 3
+	src.dialogclose d_house_placement_menu
+	src.ctag.hs_placement_menu=<dargn1>
+	src.ctag.menu_val=1 10
+	src.ctag.menu_page=1
+	sdialog d_house_placement_menu
+
+[FUNCTION fd_hs_placement_bg]
+dorigin 100 100
+resizepic - - 5054 481 292
+gumppictiled *4 *6 470 20 2624
+checkertrans - - 470 20
+button +452 +2 22150 22152 1 0 0
+dhtmlgump - +1 470 20 0 0 <def.bfont_hs_title><def.center>HOUSE PLACEMENT TOOL
+gumppictiled - *24 470 20 2624
+checkertrans - - 470 20
+dhtmlgump *54 *1 120 20 0 0 <def.bfont_hs_text1>House Description
+dhtmlgump *204 - 120 20 0 0 <def.bfont_hs_text1>Storage
+dhtmlgump *64 - 120 20 0 0 <def.bfont_hs_text1>Lockdowns
+dhtmlgump *90 - 120 20 0 0 <def.bfont_hs_text1>Cost
+dorigin 104 154
+gumppictiled - - 470 210 2624
+checkertrans - - 470 210
+gumppictiled - *214 470 20 2624
+checkertrans - - 470 20
+dhtmlgump *20 *1 240 20 0 0 <def.bfont_hs_text3>Bank Balance <def.bfont_hs_text2><f_numformat <src.bankbalance>> <def.bfont_hs_text3>gp
+button 210 106 9910 9909 1 0 56	// back
+button 440 106 9904 9903 1 0 57	// next
+
+[DIALOG d_house_placement_menu]
+50,50
+page 0
+if <src.dctag0.hs_placement_menu>==1
+	local.count=20
+	local.cat=classic
+elif <src.dctag0.hs_placement_menu>==2
+	local.count=47
+	local.cat=custom_2story
+elif <src.dctag0.hs_placement_menu>==3
+	local.count=55
+	local.cat=custom_3story
+endif
+fd_hs_placement_bg
+dorigin 110 140
+for <src.ctag0.menu_val> // 1 10
+	if (<serv.itemdef.<def.house_<local.cat>_<dlocal._for>>>)
+		local.Storage = <serv.itemdef.<def.house_<local.cat>_<dlocal._for>>.basestorage>
+		button - *20 4005 4007 1 0 <dlocal._for>
+		dhtmlgump +32 - 120 20 0 0 <def.bfont_hs_text1><serv.itemdef.<def0.house_<local.cat>_<dlocal._for>>.name>
+		dhtmlgump +254 - 46 20 0 0 <def.bfont_hs_text3><def.center><f_numformat <dlocal.Storage>>
+		dhtmlgump +321 - 46 20 0 0 <def.bfont_hs_text3><def.center><f_numformat <eval <dlocal.Storage>/2>>
+		dhtmlgump +376 - 90 20 0 0 <def.bfont_hs_text2><def.center><f_numformat <serv.itemdef.<def.house_<local.cat>_<dlocal._for>>.value>>
+	endif
+endfor
+
+[DIALOG d_house_placement_menu PREBUTTON]
+src.dialogclose d_house_placement_menu
+
+[DIALOG d_house_placement_menu BUTTON]
+ON=0
+	sdialog d_house_placement_tool
+
+ON=1 57
+	if <src.dctag0.hs_placement_menu>==1
+		local.count=20
+		local.cat=classic
+	elif <src.dctag0.hs_placement_menu>==2
+		local.count=47
+		local.cat=custom_2story
+	elif <src.dctag0.hs_placement_menu>==3
+		local.count=55
+		local.cat=custom_3story
+	endif
+	if <dargn1> <= 55
+		local.item=<def.house_<local.cat>_<dargn1>>
+		if (<src.gold> < <serv.itemdef.<local.item>.value>)
+			src.sysmessage @33,,1 You lack the funds for this purchase.
+		else
+			src.f_house_placement <local.item>
+		endif
+	else // pages
+		local.page_max=<eval ((<dlocal.count>-1)/10)+1>
+		if <dargn1>==56 // back
+			src.ctag0.menu_page --
+			if <src.dctag0.menu_page> < 1
+				src.ctag.menu_page=<dlocal.page_max>
+			endif
+		else // next // 5551
+			src.ctag0.menu_page ++
+			if <src.dctag0.menu_page> > <dlocal.page_max>
+				src.ctag.menu_page=1
+			endif
+		endif
+		local.x=<eval ((<src.dctag0.menu_page>-1)*10)+1>
+		local.y=<eval <src.dctag0.menu_page>*10>
+		if <src.ctag0.menu_page>==<dlocal.page_max>
+			src.ctag0.menu_val=<dlocal.x> <dlocal.count>
+		else
+			src.ctag.menu_val=<dlocal.x> <dlocal.y>
+		endif
+	endif
+	sdialog d_house_placement_menu
+
+
+[EOF]

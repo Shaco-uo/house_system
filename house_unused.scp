@@ -1,0 +1,297 @@
+[EOF]
+
+[FUNCTION f_house_timer_reset_all]
+local.p=<src.p>
+for 0 254
+	if (<serv.maplist.<dlocal._for>>)
+		src.p=0,0,0,<dlocal._for>
+		serv.log processing map <dlocal._for>
+		src.f_house_timer_activate
+	endif
+endfor
+src.p=<local.p>
+
+[FUNCTION f_house_timer_activate]
+FORITEMS 7168
+	if (<type>==t_multi) || (<type>==t_multi_custom)
+		ref1=<region.link>
+		ref1.timer=60*60*24*<ddef0.hs_can_decay>
+	endif
+ENDFOR
+
+/////////////////////////////
+
+[FUNCTION f_house_visitor_count]
+ref1=<uid>
+ref2=<region.uid>
+if !(<ref2.isvalid>)
+elif (<ref2.housetype>!=<def.house_public>)
+elif (<ref2.isowner <ref1>> || <ref1.isgm>)
+elif (<ref2.GetCoownerPos <ref1>> >= 0 || <ref2.GetFriendPos <ref1>> >= 0)
+elif (<ref2.GetBanPos <ref1>> >= 0 || <ref2.GetAccessPos <ref1>> >= 0)
+else
+	ref2.more2 ++
+endif
+
+[FUNCTION f_house_item_flip2] // unused function?
+if !(<argo> && <argo.isitem>)
+	src.sysmessage @33,,1 Invalid Target.
+	return 1
+endif
+ref1=<src.region.uid>
+if (<argo.link>==<ref1>)
+	src.sysmessage @33,,1 You cannot flip that.
+	return 1
+endif
+if (<argo.topobj.uid> != <argo.uid>) || (<argo.region.uid> != <ref1.region.uid>)
+	sysmessage @33,,1 Item should be located in the region of the house.
+	return 1
+endif
+argo.flip
+return 1
+
+//////////////////Custom Placement check//////////////////
+
+[FUNCTION f_house_checkPlacement]
+serv.log f_house_checkPlacement
+ref1=<link.owner>//Owner
+if !<ref1.uid>
+	return 1
+endif
+if <def.custom_placement>
+	if (<f_house_checkNearArea>)
+		ref1.sysmessage @,,1 You can't build a house in this area.
+		if !(<REF1.ISGM>)
+			link.redeed
+			return 1
+		endif
+	endif
+endif
+trysrc <ref1> DIALOG d_house_placement
+
+[FUNCTION f_house_checkNearArea]
+serv.log f_house_checkNearArea
+return 0
+ref1=<region.uid>
+args=<ref1.multiregion>
+serv.newnpc c_pig
+new.flags=statf_invul|statf_insubstantial
+
+for 0 7
+	new.p=<ref1.p>
+	doswitch <dlocal._for>
+		new.move <argv0> <argv1>
+		new.move 0 <argv1>
+		new.move <argv2> <argv1>
+		new.move <argv2> 0
+		new.move <argv2> <argv3>
+		new.move 0 <argv3>
+		new.move <argv0> <argv3>
+		new.move <argv0> 0
+	enddo
+	doswitch <dlocal._for>
+		local.clear=<new.canmove nw>
+		local.clear=<new.canmove n>
+		local.clear=<new.canmove ne>
+		local.clear=<new.canmove e>
+		local.clear=<new.canmove se>
+		local.clear=<new.canmove s>
+		local.clear=<new.canmove sw>
+		local.clear=<new.canmove w>
+	enddo
+	if (<new.f_isOnRoad>) || !(<local.clear>)
+		new.remove
+		return 1
+	endif
+endfor
+
+for 0 7
+	new.p=<uid.<region.uid>.p>
+	doswitch <dlocal._for>
+		new.move <eval(<argv0>+1)> <eval(<argv1>+1)>
+		new.move 0 <eval(<argv1>+1)>
+		new.move <eval(<argv2>-1)> <eval(<argv1>+1)>
+		new.move <eval(<argv2>-1)> 0
+		new.move <eval(<argv2>-1)> <eval(<argv3>-1)>
+		new.move 0 <eval(<argv3>-1)>
+		new.move <eval(<argv0>+1)> <eval(<argv3>-1)>
+		new.move <eval(<argv0>+1)> 0
+	enddo
+	if (<new.isneartype t_tree 2>)
+		new.remove
+		return 1
+	endif
+endfor
+
+local.area=3 //<DEF.hs_PlaceMinDistArea>
+for 0 7
+	new.p=<uid.<region.uid>.p>
+	doswitch <dlocal._for>
+		new.move <eval(<argv0>+(<local.area>*-1))> <eval(<argv1>+(<local.area>*-1))>
+		new.move 0 <eval(<argv1>+(<local.area>*-1))>
+		new.move <eval(<argv2>+<local.area>)> <eval(<argv1>+(<local.area>*-1))>
+		new.move <eval(<argv2>+<local.area>)> 0
+		new.move <eval(<argv2>+<local.area>)> <eval(<argv3>+<local.area>)>
+		new.move 0 <eval(<argv3>+<local.area>)>
+		new.move <eval(<argv0>+(<local.area>*-1))> <eval(<argv3>+<local.area>)>
+		new.move <eval(<argv0>+(<local.area>*-1))> 0
+	enddo
+	if strmatch("t_multi*","<uid.<new.region.uid>.type>")
+		new.remove
+		return 2
+	endif
+endfor
+local.front=<def.hs_placemindistfront>
+for 0 5
+	new.p=<uid.<region.uid>.p>
+	doswitch <dlocal._for>
+		new.move <argv2> <eval(<argv3>+<local.front>)>
+		new.move 0 <eval(<argv3>+<local.front>)>
+		new.move <argv0> <eval(<argv3>+<local.front>)>
+		new.move <argv0> <eval(<argv1>+(<local.front>*-1))>
+		new.move 0 <eval(<argv1>+(<local.front>*-1))>
+		new.move <argv2> <eval(<argv1>+(<local.front>*-1))>
+	enddo
+	if strmatch("t_multi*","<uid.<new.region.uid>.type>")
+		new.remove
+		return 3
+	endif
+endfor
+
+new.remove
+return 0
+
+
+[FUNCTION f_isOnRoad]
+local.terrain=<serv.map(<p.x>,<p.y>,<p.m>).terrain>
+if (<local.terrain> >= 113) && (<local.terrain> <= 140)
+	return 1
+elif (<local.terrain> >= 232) && (<local.terrain> <= 235)
+	return 1
+elif (<local.terrain> >= 332) && (<local.terrain> <= 335)
+	return 1
+elif (<local.terrain> >= 353) && (<local.terrain> <= 372)
+	return 1
+elif (<local.terrain> >= 496) && (<local.terrain> <= 499)
+	return 1
+elif (<local.terrain> >= 622) && (<local.terrain> <= 633)
+	return 1
+elif (<local.terrain> >= 638) && (<local.terrain> <= 641)
+	return 1
+elif (<local.terrain> >= 804) && (<local.terrain> <= 940)
+	return 1
+elif (<local.terrain> >= 1351) && (<local.terrain> <= 1366)
+	return 1
+elif (<local.terrain> >= 1431) && (<local.terrain> <= 1446)
+	return 1
+elif (<local.terrain> >= 1966) && (<local.terrain> <= 1969)
+	return 1
+elif (<local.terrain> >= 1090) && (<local.terrain> <= 1145)	// sand stones
+	return 1
+elif (<local.terrain> >= 1281) && (<local.terrain> <= 1296)	// sand stones
+	return 1
+elif (<local.terrain> >= 9) && (<local.terrain> <= 21)		// furrows
+	return 1
+elif (<local.terrain> >= 336) && (<local.terrain> <= 348)	// furrows
+	return 1
+else
+	return 0
+endif
+
+[FUNCTION f_house_floor]
+// serv.log <args> ---- <eval <serv.map(<p.x>,<p.y>,<p.m>).terrain.z>+5> ---- <serv.map(<p.x>,<p.y>,<p.m>).terrain.z> ---- <eval 1+(<args>-<eval <serv.map(<p.x>,<p.y>,<p.m>).terrain.z>+5>)/20>
+local.terrain=<eval <serv.map(<p.x>,<p.y>,<p.m>).terrain.z>+7>
+if (<args> > <local.terrain>)
+	return <eval(1+(<args>-<local.terrain>)/20)>
+endif
+return 0
+
+[FUNCTION f_multi_onplacement_check]
+//local values=west, north, east, south
+local.check_blockradius=-1,-1,1,1
+local.check_multiradius=0,-5,0,5
+
+if (<def.hs_placement_check_roads>)
+	args=<serv.itemdef.<local.id>.multiregion>
+	local.left=<argv0>
+	local.top=<argv1>
+	local.max_x=<eval -<local.left> + <argv2>>
+	local.max_y=<eval -<local.top> + <argv3>>
+	serv.newnpc=c_man_invisible
+	new.flags |= statf_invisible
+	new.p=<local.p>
+	new.move <local.left>,<local.top>
+
+	for py 1 <local.max_y>
+		for px 1 <local.max_x>
+			if (<new.f_isOnRoad>)
+				new.remove
+				return 1
+			endif
+			new.move 1
+		endfor
+		new.move -<local.max_x> 1
+	endfor
+	new.remove
+endif
+
+// args=<multiregion>
+// foritems 
+
+//////////////////////////////////////////////////////
+
+[DIALOG d_house_placement]
+100,100
+noclose
+f_house_dialog 0,0,420,280
+dhtmlgump 10 11 400 24 0 0 <def.bfont_hs_red><def.center>!!! WARNING !!!
+dhtmlgump 10 37 404 200 1 1 You are about to place a new house. Placing this house will <def.bfont_hs_title>condemn<def.bfont_black> any and all of your other houses that you may have.<DEF.BR><DEF.BR>In addition, you will not be able to place another house or have one transferred to you for one (1) real-life week.<DEF.BR><DEF.BR>Once you accept these terms, these effects cannot be reversed.  Re-deeding or transferring your new house will <def.bfont_hs_title>not<def.bfont_black> uncondemn your other house(s) nor will the one week timer be removed.<DEF.BR><DEF.BR>If you are absolutely certain you wish to proceed, click the button next to OKAY below.  If you do not wish to trade for this house, click CANCEL.
+button 110 247 4005 4007 1 0 0
+dhtmlgump 143 250 100 20 0 0 <def.bfont_hs_text1>CANCEL
+button 240 247 4005 4007 1 0 1
+dhtmlgump 273 250 100 20 0 0 <def.bfont_hs_text1>OKAY
+
+[DIALOG d_house_placement BUTTON]
+ON=0
+	if (<link.tag0.placement> != i_gold)
+		link.redeed
+		return 1
+	endif
+	link.remove
+
+ON=1
+	if <link.isvalid> && (<link.tag0.placement>==i_gold)
+		if (<src.isgm>)
+			src.sysmessage @,,1 <link.value> gp would have been withdrawn from your bank if you were not a GM.
+		elif (<src.gold> < <link.value>)
+			src.sysmessage @,,1 You lack the funds avaible in your bankbox to purchase this house. Try placing a smaller house, or adding gold to your bankbox.
+			link.remove
+			return 1
+		else
+			src.gold -= <link.value>
+			src.update
+			src.sysmessage @,,1 <link.value> gp has been withdrawn from your bank box.
+		endif
+	endif
+	if <def.hs_can_decay> && !<src.isgm>
+		attr=02|010
+		timer=60*60*24*<ddef0.hs_can_decay>
+	else
+		attr=010
+		timer=-1
+	endif
+	
+	if <link.isvalid>
+		name=<link.name>
+		link.region.events +r_house_system
+		link.region.flags=region_flag_nodecay|region_flag_nobuilding|region_antimagic_recall_in|region_flag_insta_logout
+		
+		ref1=<uid> //sign
+		ref2=<link> //house
+		ref3=<link.owner> //owner
+		ref2.tag.sign=<uid>
+		tag.sign_dispid=<hval(<dispid> & ~0a8f00000)>
+		ref2.tag.buildon=<serv.rtime>
+	endif
+
+[EOF]

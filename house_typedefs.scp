@@ -1,0 +1,690 @@
+﻿//****************************************************************************
+// SphereServer by: SphereServer development team and Menasoft.
+// www.sphereserver.net
+//****************************************************************************
+VERSION=X1
+
+// House sign override
+[TYPEDEF ei_house_sign]
+On=@Create
+	timerf 1, trigger @HouseSysInit // The LINK is automatically set immediately after placement and @Create
+
+On=@HouseSysInit
+	if <link.isvalid> && !<link.tag0.convert>
+		attr=010
+		timer=-1
+	else
+		if <def.hs_can_decay>
+			attr=02|010
+			timer=60*60*24*<ddef0.hs_can_decay>
+		else
+			attr=010
+			timer=-1
+		endif
+	endif
+	if <link.isvalid>
+		name=<link.name>
+		link.region.events=+r_house_system
+		link.region.flags=region_flag_nodecay|region_flag_nobuilding|region_antimagic_recall_in|region_flag_insta_logout|region_flag_house
+		
+		ref1=<uid> //sign
+		ref2=<link> //house
+		ref3=<link.owner> //owner
+
+		if !<isempty <ref2.tag.telepads>>
+			hs_set_telepads <ref2>
+		endif
+		ref2.tag.sign=<uid>
+		tag.sign_dispid=<hval(<dispid> & ~0a8f00000)>
+		ref2.tag.buildon=<serv.rtime>
+	else
+		tag.forsale=1
+		attr=010
+		timer=-1
+	endif
+	resendtooltip 1,0
+
+// On=@Click
+// 	ref4=<link.region.uid>
+// 	if !<ref4.tag0.forsale>
+// 		if (<link.housetype>==<def.house_guild>)
+// 			if <link.tag0.is_guild>
+// 				ref5=<link.tag0.is_guild>
+// 				if <ref5.isvalid>
+// 					local.abbrev=<qval <ISEMPTY <ref5.abbrev>>?[None]:<ref5.abbrev>>
+// 				endif
+// 			endif
+// 			message <name>
+// 			message [<local.abbrev>]
+// 			return 1
+// 		else
+// 			return 0
+// 		endif
+// 	else
+// 		message FOR SALE
+// 		message <link.dtag0.price> gp
+// 		return 1
+// 	endif
+
+On=@Clienttooltip
+	if <link.isvalid>
+		local.tooltip=<def.bfont_white><link.name>
+		local.tooltip .= <def.br>Owned by <link.owner.name>
+		if <link.housetype>==<def.house_guild>
+			if <link.tag0.is_guild>
+				ref5=<link.tag0.is_guild>
+				if <ref5.isvalid>
+					if !<isempty <ref5.abbrev>>
+						local.guild_name=[<ref5.abbrev>]
+					else
+						local.guild_name=<ref5.name>
+					endif
+				endif
+			endif
+			local.tooltip .= <def.br>[<local.abbrev>] Guild House
+		endif
+		local.tooltip .= <def.br><qval <link.housetype>==<def.house_private>?Private Home:Public> Access
+		ref4=<link.region.uid>
+		if <link.tag0.demolition>
+			local.tooltip .= <def.br>Demolition Scheduled in <f_time_format <timer>>
+		elif <ref4.tag0.forsale>
+			local.tooltip .= <def.br><def.bfont_lgreen>FOR SALE<def.br><def.bfont_lyellow><f_numformat <link.dtag0.price>><def.bfont_white>gp
+		endif
+		ADDCLILOC <def0.empty_cliloc>,<local.tooltip>
+		return 1
+	endif
+
+On=@DClick
+	if (<link> != <def.link_invalid>)
+		if !(<def.hs_can_decay>)
+			if (<attr> & 02)
+				attr &= ~02
+				timer=-1
+			endif
+		else
+			if !(<attr> & 02)
+				attr |= 02
+				if (<timer> < 0)
+					timer=60*60*24*<ddef0.hs_can_decay>
+				endif
+			endif
+		endif
+	endif
+	if (<link.isowner <src>>) || (<link.GetCoownerPos <src>> >= 0) || (<link.GetFriendPos <src>> >= 0) || (<src.isgm>)
+		if (<src.region.uid>==<link>)
+			src.ctag.hs_menu=
+			src.ctag.hs_sign=<uid>
+			src.f_resenddialog d_house_menu
+		else
+			src.sysmessage @33,,1 You must be standing on your doorstep to access the house menu.
+		endif
+	else
+		ref4=<link.region.uid>
+		src.ctag.hs_sign=<uid>
+		if <ref4.tag0.forsale>
+			src.f_resenddialog d_house_forsale
+		else
+			src.f_resenddialog d_house_visitor
+		endif
+	endif
+	return 1
+
+On=@Timer
+	ref2=<link.owner>
+	if (<def.hs_can_decay>)
+		attr=012
+		if (<link>)
+			link.redeed
+		endif
+		if <ref2.isonline>
+			ref2.sysmessage @,,1 Your <link.name> in <region.region.name> has collapsed
+			ref2.sysmessage @,,1 The number of houses you own is now <ref2.houses>
+		endif
+	else
+		return 1
+	endif
+
+// Event for locked down items.
+[TYPEDEF ei_house_lockdown]
+On=@ClientTooltip
+	if <istevent.t_item_tooltip>
+	elif <istevent.t_static_tooltip>
+	elif <istevent.ei_custom_tooltip>
+	else
+		local.tooltip=Locked Down
+		if !<isempty <tag.lockedby>>
+			local.tooltip .= <def.br>by <uid.<tag.lockedby>.name>
+		endif
+		ADDCLILOC <ddef0.empty_cliloc>,<local.tooltip>
+	endif
+
+On=@ContextMenuRequest
+	ref1=<region.uid>
+	if (<src>==<ref1.owner>) || (<tag0.lockedby>==<src>) || <src.isgm>
+		src.AddContextEntry 701,1015183	// Unlock
+	endif
+
+On=@ContextMenuSelect
+	if (<distance> > 3)
+		src.sysmessage @,,1 You can't reach <name>.
+		return 1
+	endif
+	if (<argn>==701)
+		ref1=<region.uid>
+		ref1.unlockitem <uid>
+		tag.lockedby =
+		message @,,2 501726	// No longer locked down!
+		if !<isempty <tag.decay>>
+			tag.decay =
+			timer <eval(<serv.DecayTimer>*60)>
+			attr |= attr_decay
+		endif
+		resendtooltip 1,0
+	endif
+
+On=@PickUp_Ground   // Do not allow to move this item
+	if (!<src.IsGM>)
+		return 1
+	endif
+
+On=@PickUp_Self // For containers only, do not allow to pick up items
+	if (!<src.IsGM>)
+		return 1
+	endif
+
+// When entering customize mode, all locked down items and containers are being moved to the Moving Crate
+// but they are still Locked Down items, counting as so and having their properties
+// so they can't be moved from ground nor items can be dragged from them
+// but they can still be picked up from the moving crate and dropped on the ground or other containers
+// that's why some checks must be done to prevent malintentionated/unintended placements outside the multi.
+On=@DropOn_Ground
+	if (<region.uid> != <link.region.uid>)
+		return 1
+	endif
+
+On=@DropOn_Item
+	if (<argo.region.uid> != <link.region.uid>)
+		return 1
+	endif
+
+On=@Destroy
+	ref1=<link>
+	if (<ref1.isvalid>)
+		if (<ref1.type>==t_multi || <ref1.type>==t_multi_custom)
+			ref1.unlockitem <uid> // fix house lockdowns count
+		endif
+	endif
+
+// Doors event
+[TYPEDEF ei_house_door]
+// On=@Click
+// 	if ((<def0.hs_door_acces_key>) && (<serv.AutoHouseKeys>))
+// 	else
+// 		f_house_msg_access
+// 	endif
+
+On=@Clienttooltip
+	local.tooltip=<def.bfont_white><name>
+	if !(<def0.hs_door_acces_key> && <serv.AutoHouseKeys>)
+		if (<tag0.access>==<def.house_access_owner>)
+			local.tooltip .= <def.br>Access <def.bfont_lyellow>Owner Only<def.bfont_white>
+		elif (<tag0.access>==<def.house_access_coowner>)
+			local.tooltip .= <def.br>Access <def.bfont_lyellow>Co-Owners<def.bfont_white>
+		elif (<tag0.access>==<def.house_access_friend>)
+			local.tooltip .= <def.br>Access <def.bfont_lyellow>Friends<def.bfont_white>
+		elif (<tag0.access>==<def.house_access_guild>)
+			ref5=<tag0.is_guild>
+			if <ref5.isvalid>
+				local.tooltip .= <def.br><qval <isempty <ref5.abbrev>>?<ref5.name><def.br>Members Only:[<ref5.abbrev>] Members Only>
+			endif
+		endif
+	endif
+	ADDCLILOC <ddef0.empty_cliloc>,<local.tooltip>
+	return 1
+
+On=@ContextMenuRequest
+	ref1=<region.uid>
+	if (<src>==<ref1.owner>) || <src.isgm>
+		src.AddContextEntry 700,1078864	// Access
+	endif
+
+On=@ContextMenuSelect
+	if (<argn>==700)
+		src.ctag.hs_sign=<link.tag0.sign>
+		src.ctag.secure=<uid>
+		src.f_resenddialog d_house_secure
+	endif
+
+On=@DClick
+	ref1=<region.uid>
+	if <def.hs_can_decay>
+		if (<ref1.tag0.decay_exempt>)
+			ref1.link.timer=-1
+		else
+			if !<def.hs_property_tax>
+				if (<ref1.isowner <src>>)
+					if !(<ref1.tag0.demolition>)
+						ref1.link.timer=60*60*24*<ddef0.hs_can_decay>
+					else
+						src.sysmessage @33,,1 This house is improperly placed and has been scheduled for demolition in <f_time_format <ref1.link.timer>>.
+						src.sysmessage @33,,1 Unless you redeed it yourself before that time the house and all items within will be lost without refund.
+					endif
+				endif
+			else
+				if (<ref1.tag0.demolition>)
+					src.sysmessage @33,,1 This house is improperly placed and has been scheduled for demolition in <f_time_format <ref1.link.timer>>.
+					src.sysmessage @33,,1 Unless you redeed it yourself before that time the house and all items within will be lost without refund.
+				endif
+			endif
+		endif
+	endif
+	if ((<def0.hs_door_acces_key>) && (<serv.AutoHouseKeys>)) // If keys are used, let the server check them.
+		return 0
+	endif
+	if (<type>==t_door_locked)
+		type=t_door
+	endif
+	if (<f_house_can_access>)
+		UseDoor
+		return 1
+	endif
+	return 1
+
+// House container created from COMPONENTs from [MULTIDEF ] (this also have 'ei_house_component').
+[TYPEDEF ei_house_container]
+
+// House Component created from [MULTIDEF ].
+[TYPEDEF ei_house_component]
+
+// Event for Moving Crates.
+// Moving Crates are meant for House Customizing purposes, some items are moved inside when required
+// in customize mode. Player storage is NOT allowed.
+// Moving Crates are automatically deleted when there are no items inside.
+// *More behaviour on player side event (e_moving_crate).
+[TYPEDEF ei_moving_crate]
+On=@Create
+	attr |= <def.attr_invis>
+
+On=@PickUp_Self
+	if (<count> <= 1)
+		remove
+	endif
+
+On=@Destroy
+	ref1=<link.owner>
+	if (<ref1> && <ref1.isevent.e_moving_crate>)
+		ref1.events -e_moving_crate
+	endif
+
+// Secured Containers.
+// Only allowed players can manage their storage (Refer to f_house_can_access to see the allowance).
+[TYPEDEF ei_house_secure]
+// On=@Click
+// 	f_house_msg_access
+
+On=@ClientTooltip
+	//if <istevent.t_item_tooltip>
+	if <istevent.t_static_tooltip>
+	elif <istevent.ei_custom_tooltip>
+	else
+		f_house_tooltip_access
+	endif
+
+On=@ContextMenuRequest
+	ref1=<region.uid>
+	if (<src>==<ref1.owner>) || (<src.isgm>)
+		src.AddContextEntry 700,1078864	// Access
+		src.AddContextEntry 701,1015183	// Unlock
+	endif
+
+On=@ContextMenuSelect
+	if (<distance> > 3)
+		src.sysmessage @,,1 You can't reach <name>.
+		return 1
+	endif
+	if (<argn>==700)
+		src.ctag.hs_sign=<link.tag0.sign>
+		src.ctag.secure=<uid>
+		src.f_resenddialog d_house_secure
+	elif (<argn>==701)
+		ref1=<region.uid>
+		ref1.release <uid>
+		message @,,2 501718	// No longer secure!
+		if !<isempty <tag.decay>>
+			tag.decay =
+			timer=<eval(<serv.DecayTimer>*60)>
+			attr |= attr_decay
+		endif
+		resendtooltip 1,0
+	endif
+
+On=@DClick
+	if (<f_house_can_access>)
+		return 0
+	endif
+	return 1
+
+On=@PickUp_Ground
+	if (!<src.IsGM>)
+		 return 1
+	endif
+
+On=@PickUp_Self
+	if (<f_house_can_access>)
+		 return 0
+	endif
+	return 1
+
+// Telepad for multis.
+[TYPEDEF ei_house_telepad]
+On=@Click
+	f_house_msg_access
+
+On=@ContextMenuRequest
+	ref1=<region.uid>
+	if (<src>==<ref1.owner>) || <src.isgm>
+		src.AddContextEntry 700,1078864	// Access
+	endif
+
+On=@ContextMenuSelect
+	if (<argn>==700)
+		src.ctag.hs_sign=<link.tag0.sign>
+		src.ctag.secure=<uid>
+		src.f_resenddialog d_house_secure
+	endif
+
+On=@Step
+	if !(<f_house_can_access>)
+		return 1
+	endif
+
+// @Custom event for house transfers
+[TYPEDEF t_trade_house_deed]
+On=@Click
+	message House Transfer Contract
+	message House Name: <link.name>
+	message Owner: <uid.<link.more1>.name>
+	// message Location: <LINK.SEXTANTP> //<LINK.REGION.REGION.NAME> (<LINK.P>)
+	message Location: <link.p.x>,<link.p.y>
+	return 1
+
+On=@Timer
+	if (<cont.type>==t_eq_trade_window)
+		timerf 2,trigger @Timer
+	else
+		uid.<more>.events -e_house_transfer
+		remove
+	endif
+	return 1
+
+On=@HouseTraded
+	ref1=<more1>		//New Owner
+	ref2=<link.owner>	//Old Owner
+	ref1.events=-e_house_transfer
+	ref2.events=-e_house_transfer
+	link.tag.lasttransfer=<f_return_todate <serv.rtime>>
+	ref2.delhouse <uid>
+	link.owner=<ref1>
+	for <eval(<ref2.count>-1)> 0
+		if (<ref2.findcont.<dlocal._for>.link>==<link.link>)
+			ref2.findcont.<dlocal._for>.cont=<ref1>
+		endif
+	endfor
+	ref2.sysmessage @,,1 You transfer the property to <ref1.name>.
+	ref2.sysmessage @,,1 The number of houses you own is now <ref2.houses>.
+	ref1.sysmessage @,,1 <ref2.name> has transferred ownership of this property to you.
+	ref1.sysmessage @,,1 The number of houses you own is now <ref1.houses>.
+	link.delban -1
+	link.delcoowner -1
+	link.delaccess -1
+	link.delfriend -1
+	link.resendtooltip 1
+
+// @Override of t_deed typedef
+[TYPEDEF t_deed]
+On=@DClick
+	if (<topcont>!=<src.findlayer.21>)
+		src.sysmessage @,,1 The item must be on your backpack.
+		return 1
+	endif
+	if (<dispid>==i_gold) && (<dispid>!=i_deed_ship)
+		timerf 60,trigger @TargOn_Cancel
+	endif
+
+On=@TargOn_Ground
+	if !(<src.isgm>)
+		if (<dispid>!=i_deed_ship)
+			if (<src.dtag0.House_PlacementDelay> > <serv.time>) && (<def0.hs_placement_delay>)
+				src.sysmessage @33,,1 Number of days until you can place another house: <eval((<src.dtag0.House_PlacementDelay>-<serv.time>)/864000)>
+				return 1
+			elif !(<def0.hs_placement_ilshenar_facet>) && (<src.TARGP.M>==2)
+				src.sysmessage @33,,1 Housing cannot be created in this area.
+				trigger @TargOn_Cancel
+				return 1
+			endif
+			src.timerf 1,f_house_isPlaced <more1> <baseid> <src.targp>
+		else
+			local.p=<src.p>
+			src.timerfms 300,src.p=<local.p>
+		endif
+	endif
+
+On=@TargOn_Char
+	if <src.isgm>
+		return 0
+	endif
+	src.sysmessage @33,,1 You must place your house on ground.
+	trigger @TargOn_Cancel
+	return 1
+
+On=@TargOn_Item
+	src.sysmessage @33,,1 You must place your house on ground.
+	trigger @TargOn_Cancel
+	return 1
+
+On=@TargOn_Cancel
+	if (<dispid>==i_gold) && <dispid>!=i_deed_ship
+		src.sdialog d_house_placement_tool
+		remove
+	endif
+
+// @Custom region event for houses.
+[REGIONTYPE r_house_system]
+On=@Enter
+	if <src.isplayer>
+		src.events=+e_house_player_events
+		// SRC.dSPEECH +spk_player_house
+		ref1=<uid>
+		if !<src.isgm>
+			if <ref1.housetype>==<def.house_private>
+				if (<ref1.isowner <src>>) || (<ref1.getcoownerpos <src>> >= 0) || (<ref1.getfriendpos <src>> >= 0) || (<ref1.GetAccessPos <src>> >= 0) || (<src.isgm>)
+					return 0
+				elif (<ref1.housetype>==<def.house_guild>)
+					if (<src.guild>==<ref1.tag0.is_guild>)
+						return 0
+					else
+						src.sysmessage @33,,1 You are not a member of this guild.
+						return 1
+					endif
+				else
+					src.sysmessage @33,,1 This is private property. You may not trespass.
+					return 1
+				endif
+			else
+				if (<ref1.getbanpos <src>> >= 0)
+					src.sysmessage @33,,1 You are banned from this property.
+					return 1
+				else
+					// src.timerf 1, f_house_visitor_count
+					return 0
+				endif
+			endif
+		endif
+	endif
+
+On=@Exit
+	src.dialogclose d_house_menu 
+	src.events -e_house_player_events
+
+//////////////////////////////////////////////////////////////////////////////////////events///////////////////////////////////////////////////
+[EVENTS e_house_count_block]
+On=@AddMulti
+	if (<argn2> != <def.hp_owner>)
+		return 1 // Prevents this multi from being added to SRC's house storage
+	endif
+
+[EVENTS e_house_transfer]
+On=@TradeAccepted
+	dialogclose d_house_demolish
+	dialogclose d_house_menu
+	if <argn1>
+		for <argn1>
+			if <ref<dlocal._for>>
+				if (<ref<dlocal._for>.type>==t_trade_house_deed)
+					ref<dlocal._for>.trigger @HouseTraded
+					ref<dlocal._for>.remove
+				endif
+			endif
+		endfor
+	endif
+	EVENTS=-e_house_transfer
+
+[EVENTS e_house_player_events]
+On=@ItemDClick
+	if (<act.defname>==<def.vendor_deed_id>)
+		ref1=<region.uid>
+		if !<def.house_list_vendors>
+			if !(<ref1.isowner <uid>>) && !(<src.isgm>)
+				src.sysmessage @33,,1 Only the home owner may place vendors here.
+				return 1
+			else
+				if (<ref1.housetype>==<def.house_private>)
+					src.sysmessage @33,,1 You must set your building to public before you can place vendors here.
+					return 1
+				else
+					if (<ref1.vendors> < <ref1.maxvendors>)
+						return 0
+					else
+						src.sysmessage @33,,1 You have no available vendor slots.
+						src.sysmessage @33,,1 You must remove an existing vendor before you can place a new one.
+						return 1
+					endif
+				endif
+			endif
+		else
+			if (<ref1.isowner <src>>) || (<ref1.getcoownerpos <src>> >= 0) || (<ref1.getfriendpos <src>> >= 0) || (<src.isgm>)
+				if (<ref1.housetype>==house_private)
+					src.sysmessage @33,,1 You must set your building to public before you can place vendors here.
+					return 1
+				else
+					if (<ref1.vendors> < <ref1.maxvendors>)
+						return 0
+					else
+						src.sysmessage @33,,1 You have no available vendor slots.
+						src.sysmessage @33,,1 You must remove an existing vendor before you can place a new one.
+						return 1
+					endif
+				endif
+			else
+				src.sysmessage @33,,1 Only people on the home lists may place a vendor here.
+				return 1
+			endif
+		endif
+	endif
+
+On=@ContextMenuRequest
+	ref1=<region.uid>
+	if (<uid>==<src>) && <ref1.link>
+		src.AddContextEntry 101,3006207
+	endif
+
+On=@ContextMenuSelect
+	if (<argn>==101)
+		ref1=<region.uid>
+		src.go <uid.<ref1.link>.p>
+	endif
+
+[EVENTS e_house_customize]
+On=@SkillStart
+	if !(<housedesign>)
+		return 2
+	endif
+	src.sysmessage @33,,1 You cannot do this whilst designing a house.
+	return 1
+
+On=@SkillUseQuick
+	if !(<housedesign>)
+		return 2
+	endif
+	return 1
+
+// On=@HouseDesignCommitItem
+// serv.log <local.id> --- <local.p.x> ---- <local.p.y> ------ <local.p.z> ------- <local.visible>
+
+On=@HouseDesignCommit
+	if (<isgm>)
+		src.sysmessage @33,,1 You cannot do this whilst designing a house.
+		return 2
+	endif
+	local.oldcost=<eval(<argn1> * 500)>
+	local.newcost=<eval(<argn2> * 500)>
+	local.curcost=<eval(<local.newcost> - <local.oldcost>)>
+	if (<gold> < <local.curcost>)
+		src.sysmessage @33,,1 You lack the funds to pay off this design.
+		return 1
+	endif
+	argo.tag0.construction=<eval(<local.newcost>-<argo.value>)>
+		src.sysmessage @,,1 Your new house design has been committed.
+	if (<local.curcost>==0)
+			src.sysmessage @,,1 As the new design costs the same as the previous one, no gp has been taken out of your account.
+	elif (<local.curcost> < 0)
+		local.curcost=<eval(0 - <local.curcost>)>
+		gold += <local.curcost>
+		src.sysmessage @,,1 As the new design is cheaper than the previous one, <dlocal.curcost> gp has been returned to you.
+	else
+		gold -= <local.curcost>
+		src.sysmessage @,,1 <dlocal.curcost> gp has been taken out of your account to pay for the construction.
+	endif
+	return 2
+
+On=@HouseDesignExit
+	sysmessage @,,1 You have left house design mode.
+	events -e_house_customize
+	if <argo.MovingCrate>
+		ref1=<argo.MovingCrate>
+		ref1.attr |= attr_invis
+		ref1.p=<argo.p>
+		ref1.move 0,0,-20
+	endif
+	return 2
+
+[EVENTS e_moving_crate]
+On=@LogOut
+	for 0 <eval(<houses>-1)>
+		ref1=<house.<dlocal._for>.MovingCrate>
+		if (<ref1>)
+			ref1.attr |= attr_invis
+			ref1.p=<ref1.link.p>
+			ref1.move 0 0 -20
+		endif
+	endfor
+	events -e_moving_crate
+
+On=@HouseDesignBegin
+	for 0 <eval(<houses>-1)>
+		ref1=<house.<dlocal._for>.MovingCrate>
+		if (<ref1>)
+			ref1.attr |= attr_invis
+			ref1.p=<ref1.link.p>
+			ref1.move 0 0 -20
+		endif
+	endfor
+	events -e_moving_crate
+
+// Event applied when you are listed (with any privilege) on one or more houses.
+[EVENTS e_house_priv]
+
+// Event applied when you are listed (with any privilege) on one or more ships.
+// [EVENTS e_ship_priv]
+
+[EOF]

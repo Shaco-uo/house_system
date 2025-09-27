@@ -1,0 +1,115 @@
+[FUNCTION f_numformat]
+local.num=<args>
+local.len=<eval strlen(<dlocal.num>)>
+if <dlocal.num> <= 3
+	return <dlocal.num>
+else
+	local.c=2
+	for 1 <dlocal.len>
+		if <dlocal._for> > 3
+			local.c ++
+			if <dlocal.c>==3
+				local.c=
+				local.r=".<local.r>"
+			endif
+		endif
+		if <dlocal._for>==1
+			local.r="<strsub <eval (<dlocal.len>-<dlocal._for>)> 1 <args>>"
+		else
+			local.r="<strsub <eval (<dlocal.len>-<dlocal._for>)> 1 <args>><local.r>"
+		endif
+	endfor
+	return <local.r>
+endif
+
+
+[FUNCTION f_time_format]
+local.d = <eval <args>/86400>
+local.r = <f_div_rest <args>,86400>
+local.h = <eval <dlocal.r>/3600>
+local.r = <f_div_rest <dlocal.r>,3600>
+local.m = <eval <dlocal.r>/60>
+local.r = <f_div_rest <dlocal.r>,60> // secs
+if <local.d>
+	if <eval <dlocal.h>+<dlocal.m>+<dlocal.r>>==0
+		local.t="<dlocal.d> <qval <dlocal.d>==1?day:days>"
+	else
+		local.t="<dlocal.d> <qval <dlocal.d>==1?day:days> <f_addzero <dlocal.h>>:<f_addzero <dlocal.m>>:<f_addzero <dlocal.r>>"
+	endif
+else
+	local.t="<f_addzero <dlocal.h>>:<f_addzero <dlocal.m>>:<f_addzero <dlocal.r>>"
+endif
+return <local.t>
+
+[FUNCTION f_div_rest]
+local.v=<eval <argv[0]>/<argv[1]>>
+local.r=<eval <dlocal.v>*<argv[1]>>
+local.vr=<eval <argv[0]>-<dlocal.r>>
+return <dlocal.vr>
+
+[FUNCTION f_addzero]
+local.n=<args>
+return <qval <dlocal.n> < 10?<dlocal.z><dlocal.n>:<dlocal.n>>
+
+
+[FUNCTION f_return_todate]
+if <ISEMPTY <args>>
+	local.year = "<f_rtime_year <serv.rtime>>"
+	local.month = "<f_rtime_month <serv.rtime>>"
+	local.day = "<f_rtime_day <serv.rtime>>"
+	local.hour = "<f_rtime_hours <serv.rtime>>"
+	local.min = "<f_rtime_minutes <serv.rtime>>"
+	local.todate = "<f_rtime_day <serv.rtime>>.<f_rtime_month <serv.rtime>>.<f_rtime_year <serv.rtime>> <f_rtime_hours <serv.rtime>>:<f_rtime_minutes <serv.rtime>>"
+else
+	local.year = "<f_rtime_year <args>>"
+	local.month = "<f_rtime_month <args>>"
+	local.day = "<f_rtime_day <args>>"
+	local.hour = "<f_rtime_hours <args>>"
+	local.min = "<f_rtime_minutes <args>>"
+	local.todate = "<f_rtime_day <args>>.<f_rtime_month <args>>.<f_rtime_year <args>> <f_rtime_hours <args>>:<f_rtime_minutes <args>>"
+endif
+return <local.todate>
+
+[FUNCTION f_rtime_year]
+if <ISEMPTY <args>>
+	return <serv.rtime.format %Y>
+else
+	return "<eval(<STRSUB 0 4 <args>>)>"
+endif
+
+[FUNCTION f_rtime_month]
+if <ISEMPTY <args>>
+	return <serv.rtime.format %m>
+else
+	return <STRSUB 5 2 <args>>
+endif
+
+[FUNCTION f_rtime_day]
+if <ISEMPTY <args>>
+	return <serv.rtime.format %d>
+else
+	return <STRSUB 8 2 <args>>
+endif
+
+[FUNCTION f_rtime_hours]
+if <ISEMPTY <args>>
+	return <serv.rtime.format %H>
+else
+	return <STRSUB 11 2 <args>>
+endif
+
+[FUNCTION f_rtime_minutes]
+if <ISEMPTY <args>>
+	return <serv.rtime.format %M>
+else
+	return <STRSUB 14 2 <args>>
+endif
+
+[FUNCTION f_rtime_second]
+if <ISEMPTY <args>>
+	return <serv.rtime.format %S>
+else
+	return <STRSUB 17 2 <args>>
+endif
+
+[EOF]

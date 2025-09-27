@@ -1,0 +1,119 @@
+//****************************************************************************
+// SphereServer by: SphereServer development team and Menasoft.
+// www.sphereserver.net
+//****************************************************************************
+VERSION=X1
+
+
+[ITEMDEF i_house_placement_tool]
+DEFNAME=i_house_placement_tool
+ID=014f6
+NAME=House Placement Tool
+VALUE=600
+DUPELIST=014f5
+ON=@DClick
+	if (<topcont>!=<src.findlayer.21>)
+		src.sysmessage @,,1 The item must be on your backpack.
+	else
+		src.f_resenddialog d_house_placement_tool
+	endif
+	return 1
+
+
+[ITEMDEF i_trashcan]
+NAME=trashcan
+ID=i_barrel_open
+TYPE=t_container
+CATEGORY=Special Items
+SUBSECTION=Unequippable
+DESCRIPTION=Trashcan
+On=@Create
+	COLOR=0835
+	attr=010
+
+On=@Dropon_Self
+	src.sound = 011e
+	argo.remove
+	return 1
+
+
+[ITEMDEF i_house_interior_decorator]
+DEFNAME=i_house_interior_decorator
+ID=0fc1
+NAME=Interior Decorator
+TYPE=t_script
+WEIGHT=2.0
+VALUE=10000
+CATEGORY=Custom
+SUBSECTION=House Deco
+DESCRIPTION=_Interior Decorator
+On=@DClick
+	ref1=<src.region.uid>
+	if (<topcont>!=<src.findlayer.21>)
+		src.sysmessage @,,1 The item must be on your backpack.
+	elif !(<ref1.isowner <src>> || <ref1.getcoownerpos <src>> >= 0 || <src.isgm>)
+		src.sysmessage @33,,1 Only owner and co-owners can use this item.
+	elif !(<tag0.mode>)
+		sdialog d_house_interior_decorator
+	else
+		tag.house = <region.uid>
+		target
+	endif
+	return 1
+
+On=@TargOn_Char
+	tag.house=
+	return 1
+On=@TargOn_Cancel
+	tag.house=
+On=@TargOn_Item
+	if (<argo>==<uid>)
+		tag.house =
+		tag.mode =
+		sdialog d_house_interior_decorator
+		return 1
+	endif
+
+	
+	ref1 = <argo.region.uid>
+	if (<ref1>!=<tag0.house>) || !(<src.f_house_isInside>)
+		src.sysmessage @33,,1 You should be located in the region of the house.
+	elif (<argo.cont>) || (<argo.region.uid> != <tag0.house>) || !(<argo.f_house_isInside>)
+		src.sysmessage @33,,1 The item should be located in the region of the house.
+	elif !(<argo.isevent.ei_house_lockdown>)
+		src.sysmessage @33,,1 The item should be locked.
+	elif !(<ref1.owner>==<src>)
+		src.sysmessage @33,,1 The item should be located in the region of your house.
+	else
+		tag.house=
+		if (<dtag0.mode>==1)
+			if !(<argo.flip>)
+				src.sysmessage @33,,1 You can not flip it!
+			else
+				argo.flip
+			endif
+			return 1
+		elif (<dtag0.mode>==2)
+			if (<eval(<argo.p.z>-<argo.tag.startedz>)> >= 15)
+				src.sysmessage @33,,1 This item can not go upper!
+			else
+				argo.nudgeup
+			endif
+			return 1
+		elif (<dtag0.mode>==3)
+			if (<eval(<argo.p.z>-<argo.tag.startedz>)> <= 0)
+				src.sysmessage @33,,1 This item can not go lower!
+			else
+				argo.nudgedown
+			endif
+			return 1
+		endif
+	endif
+	return 1
+	
+
+[ITEMDEF i_house_transfer]
+ID = i_memory
+type = t_script
+
+[EOF]
