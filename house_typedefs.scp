@@ -238,6 +238,7 @@ On=@ContextMenuRequest
 
 On=@ContextMenuSelect
 	if (<argn>==700)
+		src.ctag.hs_menu=
 		src.ctag.hs_sign=<link.tag0.sign>
 		src.ctag.secure=<uid>
 		src.f_resenddialog d_house_secure
@@ -331,6 +332,7 @@ On=@ContextMenuSelect
 		return 1
 	endif
 	if (<argn>==700)
+		src.ctag.hs_menu=
 		src.ctag.hs_sign=<link.tag0.sign>
 		src.ctag.secure=<uid>
 		src.f_resenddialog d_house_secure
@@ -376,6 +378,7 @@ On=@ContextMenuRequest
 
 On=@ContextMenuSelect
 	if (<argn>==700)
+		src.ctag.hs_menu=
 		src.ctag.hs_sign=<link.tag0.sign>
 		src.ctag.secure=<uid>
 		src.f_resenddialog d_house_secure
