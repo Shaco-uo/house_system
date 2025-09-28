@@ -208,7 +208,7 @@ for 1 <dlocal.max>
 	dhtmlgump +157 - 274 20 0 0 <def.bfont_hs_text3><argv[1]>.
 endfor
 
-[DIALOG d_house_commands button]
+[DIALOG d_house_commands prebutton]
 src.dialogclose d_house_commands
 
 [DIALOG d_house_commands button]
