@@ -68,7 +68,7 @@ On=@HouseSysInit
 
 On=@Clienttooltip
 	if <link.isvalid>
-		local.tooltip=<def.bfont_white><link.name>
+		local.tooltip=<def.bfont_lyellow><link.name><def.bfont_white>
 		local.tooltip .= <def.br>Owned by <link.owner.name>
 		if <link.housetype>==<def.house_guild>
 			if <link.tag0.is_guild>
@@ -82,8 +82,11 @@ On=@Clienttooltip
 				endif
 			endif
 			local.tooltip .= <def.br>[<local.abbrev>] Guild House
+		elif <link.housetype>==<def.house_private>
+			local.tooltip .= <def.br>Private
+		else
+			local.tooltip .= <def.br>Public Access
 		endif
-		local.tooltip .= <def.br><qval <link.housetype>==<def.house_private>?Private Home:Public> Access
 		ref4=<link.region.uid>
 		if <link.tag0.demolition>
 			local.tooltip .= <def.br>Demolition Scheduled in <f_time_format <timer>>
