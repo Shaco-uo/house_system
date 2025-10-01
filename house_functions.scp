@@ -57,17 +57,17 @@ endif
 return 0
 
 [FUNCTION f_house_msg_access]
-if (<tag0.access>==house_access_none)
+if (<tag0.access>==<def.house_access_none>)
 	message @,,1 Security Lvl unspecified
 	return 1
 endif
-if (<tag0.access>==house_access_owner)
+if (<tag0.access>==<def.house_access_owner>)
 	message @,,1 Owner Only
-elif (<tag0.access>==house_access_coowner)
+elif (<tag0.access>==<def.house_access_owner>)
 	message @,,1 Co-Owners Only
-elif (<tag0.access>==house_access_friend)
+elif (<tag0.access>==<def.house_access_friend>)
 	message @,,1 Friends Only
-elif (<tag0.access>==house_access_guild)
+elif (<tag0.access>==<def.house_access_guild>)
 	if <link.tag0.is_guild>
 		ref5 = <link.tag0.is_guild>
 		if <ref5.isvalid>
@@ -78,13 +78,13 @@ elif (<tag0.access>==house_access_guild)
 endif
 
 [FUNCTION f_house_tooltip_access]
-if (<tag0.access>==house_access_owner)
+if (<tag0.access>==<def.house_access_owner>)
 	ADDCLILOC <ddef0.empty_cliloc>,<def.bfont_lyellow>Owner Only<def.bfont_white>
-elif (<tag0.access>==house_access_coowner)
+elif (<tag0.access>==<def.house_access_owner>)
 	ADDCLILOC <ddef0.empty_cliloc>,<def.bfont_lyellow>Co-Owners Only<def.bfont_white>
-elif (<tag0.access>==house_access_friend)
+elif (<tag0.access>==<def.house_access_friend>)
 	ADDCLILOC <ddef0.empty_cliloc>,<def.bfont_lyellow>Friends Only<def.bfont_white>
-elif (<tag0.access>==house_access_guild)
+elif (<tag0.access>==<def.house_access_guild>)
 	if <link.tag0.is_guild>
 		ref5=<link.tag0.is_guild>
 		if <ref5.isvalid>
