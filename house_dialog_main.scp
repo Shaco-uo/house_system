@@ -35,7 +35,13 @@ endif
 dorigin 100 91 // header buttons
 for 1 5
 	local.opt=0
-	if <dlocal._for>==2  // SECURITY
+	if <dlocal._for>==1  // INFORMATION
+		if <isempty <src.ctag.hs_menu>>
+			local.opt=1
+		elif <src.dctag0.hs_menu>==<dlocal._for>
+			local.opt=1
+		endif
+	elif <dlocal._for>==2  // SECURITY
 		if <src.dctag0.hs_menu>==<dlocal._for>
 			local.opt=1
 		elif <src.dctag0.hs_menu>==7 // coowner list
