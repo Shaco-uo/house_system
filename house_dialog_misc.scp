@@ -162,10 +162,10 @@ endif
 
 [DIALOG d_house_secure button]
 ON=0
-	sysmessage @,,2 1061281 // Access level unchanged.
 	if !<isempty <src.ctag.hs_menu>>
 		sdialog d_house_menu
 	endif
+
 ON=1 5
 	ref1=<src.ctag0.hs_sign> // sign
 	ref2=<ref1.link> // house
