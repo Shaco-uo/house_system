@@ -25,7 +25,7 @@ On=@HouseSysInit
 	if <link.isvalid>
 		name=<link.name>
 		link.region.events=+r_house_system
-		link.region.flags=region_flag_nodecay|region_flag_nobuilding|region_antimagic_recall_in|region_flag_insta_logout|region_flag_house
+		link.region.flags=region_flag_nodecay|region_flag_nobuilding|region_antimagic_recall_in|region_flag_insta_logout
 		
 		ref1=<uid> //sign
 		ref2=<link> //house
