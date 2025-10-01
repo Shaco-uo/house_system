@@ -68,6 +68,10 @@ for 1 5
 			local.opt=1
 		elif <src.dctag0.hs_menu>==30 // property tax
 			local.opt=1
+		elif <src.dctag0.hs_menu>==31 // property sell
+			local.opt=1
+		elif <src.dctag0.hs_menu>==32 // property removal
+			local.opt=1
 		endif
 	elif <src.dctag0.hs_menu>==<dlocal._for>
 		local.opt=1
