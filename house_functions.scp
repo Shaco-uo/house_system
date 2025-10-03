@@ -229,6 +229,9 @@ ref2.IncreasedStorage += <dlocal.storage>
 src.sysmessage @,,1 <dlocal.value> gp has been deducted from your bank to pay for this upgrade.
 
 [FUNCTION f_house_item_lock]
+if !(<argo> && <argo.isitem>)
+	return 1
+endif
 ref1 = <region.uid>
 if !(<ref1.IsOwner <uid>> || (<ref1.GetCoownerPos <uid>> >= 0) || (<ref1.GetFriendPos <uid>> >= 0) || <IsGM>) // Double check to prevent players to get the target on their house and use it on another.
 	return 1
@@ -239,9 +242,7 @@ if <def.hs_hs_secure_locks_limit>
 		return 1
 	endif
 endif
-if !(<argo> && <argo.isitem>)
-	sysmessage @,,1 Invalid target.
-elif (<argo.region.uid>!=<ref1>)
+if (<argo.region.uid>!=<ref1>)
 	sysmessage @,,1 The item must be within the property.
 elif <argo.isevent.ei_house_lockdown> || <argo.attr>&attr_move_never
 	argo.message @,,1 This is already locked down!
@@ -264,6 +265,10 @@ else
 endif
 
 [FUNCTION f_house_item_unlock]
+if !(<argo> && <argo.isitem>)
+	// sysmessage @,,1 Invalid target.
+	return 1
+endif
 ref1 = <region.uid>
 if !(<ref1.IsOwner <uid>> || (<ref1.GetCoownerPos <uid>> >= 0) || (<ref1.GetFriendPos <uid>> >= 0) || <IsGM>) // Double check to prevent players to get the target on their house and use it on another.
 	return 1
@@ -272,7 +277,7 @@ if (<ref1.GetSecuredContainerPos <argo>> = 0) && ((<ref1.IsOwner <uid>>) || (<Is
 	ref1.release <argo>
 	argo.tag.access =
 	argo.message @,,2 501718	// No longer secure!
-elif (<argo.isitem>) && (<argo.region.uid>==<ref1>)
+elif (<argo.region.uid>==<ref1>)
 	if (<ref1.GetFriendPos <uid>> >= 0) && (<argo.tag0.lockedby> != <uid>)
 		sysmessage @33,,1 Friends can only unlock items if they are locked them.
 		return 1
@@ -289,6 +294,9 @@ endif
 argo.resendtooltip 1,0
 
 [FUNCTION f_house_item_secure]
+if !(<argo> && <argo.isitem>)
+	return 1
+endif
 ref1 = <region.uid>
 if !(<ref1.IsOwner <uid>> || (<ref1.GetCoownerPos <uid>> >= 0) || <IsGM>) // Double check to prevent players to get the target on their house and use it on another.
 	sysmessage @33,,1 Only owner and co-owner can secure items.
@@ -299,13 +307,6 @@ if <def.hs_hs_secure_locks_limit>
 		sysmessage @33,,1 Your house reached its storage limit.
 		return 1
 	endif
-endif
-if !<argo>
-	src.sysmessage @,,1 Invalid Target.
-	return 1
-elif !(<argo.isitem>)
-	src.sysmessage @,,1 Invalid Target.
-	return 1
 endif
 if (<argo.region.uid> != <ref1>)
 	sysmessage @33,,1 You should be located in the region of the house.
@@ -326,7 +327,6 @@ argo.resendtooltip 1
 
 [FUNCTION fd_house_secure]
 if !(<argo> && <argo.isitem>)
-	src.sysmessage @,,1 Invalid Target.
 	return 1
 endif
 ref1=<argo.region.uid>
