@@ -595,7 +595,7 @@ if (<def.hs_redeed_fee> && (<ref2.type>==t_multi)) // (<ref2.type>==t_multi_cust
 			dhtmlgump - *20 220 20 0 0 <def.bfont_hs_text3>Charge <def.bfont_hs_red><f_numformat <dlocal.redeedfee>><def.bfont_hs_text3> gp
 		endif
 	else
-		dhtmlgump- *20 220 20 0 0 <def.bfont_hs_text2>FREE FOR GM
+		dhtmlgump - *20 220 20 0 0 <def.bfont_hs_text2>FREE FOR GM
 	endif
 elif (<ref2.type>==t_multi)
 	dhtmlgump - *20 200 20 0 0 <def.bfont_hs_text1>Redeed & Bank Contents
