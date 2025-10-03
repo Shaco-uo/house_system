@@ -305,12 +305,10 @@ ON=1
 		name=<link.name>
 		link.region.events +r_house_system
 		link.region.flags=region_flag_nodecay|region_flag_nobuilding|region_antimagic_recall_in|region_flag_insta_logout
-		
 		ref1=<uid> //sign
 		ref2=<link> //house
 		ref3=<link.owner> //owner
 		ref2.tag.sign=<uid>
-		tag.sign_dispid=<hval(<dispid> & ~0a8f00000)>
 		ref2.tag.buildon=<serv.rtime>
 	endif
 

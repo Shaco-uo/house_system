@@ -239,19 +239,17 @@ if <def.hs_hs_secure_locks_limit>
 		return 1
 	endif
 endif
-if (<argo.isitem>) && (<argo.region.uid>==<ref1>)
-	if <argo.isevent.ei_house_lockdown> || <argo.attr>&attr_move_never
-		argo.message @,,1 This is already locked down!
-		return 1
-	endif
-	if <argo.cont>
-		sysmessage @,,1 You cannot lockdown items inside other containers.
-		return 1
-	endif
-	if <argo.f_isContainer>
-		sysmessage @,,1 You cannot lockdown containers, use secure instead.
-		return 1
-	endif
+if !(<argo> && <argo.isitem>)
+	sysmessage @,,1 Invalid target.
+elif (<argo.region.uid>!=<ref1>)
+	sysmessage @,,1 The item must be within the property.
+elif <argo.isevent.ei_house_lockdown> || <argo.attr>&attr_move_never
+	argo.message @,,1 This is already locked down!
+elif <argo.cont>
+	sysmessage @,,1 You cannot lockdown items inside other containers.
+elif <argo.f_isContainer>
+	sysmessage @,,1 You cannot lockdown containers, use secure instead.
+else
 	ref1.lockitem <argo>
 	argo.message @,,2 501721 	// Locked down!
 	if ((<argo.attr> & attr_decay) && (<argo.timer> >= 0))

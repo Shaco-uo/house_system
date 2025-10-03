@@ -35,7 +35,6 @@ On=@HouseSysInit
 			hs_set_telepads <ref2>
 		endif
 		ref2.tag.sign=<uid>
-		tag.sign_dispid=<hval(<dispid> & ~0a8f00000)>
 		ref2.tag.buildon=<serv.rtime>
 	else
 		tag.forsale=1
