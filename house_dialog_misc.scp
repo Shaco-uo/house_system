@@ -210,28 +210,31 @@ endfor
 
 [DIALOG d_house_commands prebutton]
 src.dialogclose d_house_commands
+if !(<src.isevent.e_house_player_events>)
+	return 1
+endif
 
 [DIALOG d_house_commands button]
 on=1 12
 	ref1=<src.region.uid>
-	if <dargn1>==3 // secure
-		if !(<ref1.isowner <src>> || <ref1.GetCoownerPos <src>> >= 0 || <src.isgm>)
-			return 1
-		endif
+	if !(<ref1.isowner <src>> || <ref1.GetCoownerPos <src>> >= 0 || <ref1.GetFriendPos <src>> >= 0 || <src.isgm>)
 	else
-		if !(<ref1.isowner <src>> || <ref1.GetCoownerPos <src>> >= 0 || <ref1.GetFriendPos <src>> >= 0 || <src.isgm>)
-			return 1
+		if <dargn1>==3 // secure
+			if !(<ref1.isowner <src>> || <ref1.GetCoownerPos <src>> >= 0 || <src.isgm>)
+				sdialog d_house_commands
+				return 1
+			endif
 		endif
-	endif
-	args=<def0.hs_speech_command_<dargn1>>
-	src.message @1151,,1 <argv[0]>
-	if !<isempty <argv[4]>>
-		src.message @,,1 <argv[4]>
-	endif
-	if <argv[3]>==1
-		src.targetf <argv[2]>
-	else
-		src.<argv[2]>
+		args=<def0.hs_speech_command_<dargn1>>
+		src.message @1151,,1 <argv[0]>
+		if !<isempty <argv[4]>>
+			src.message @,,1 <argv[4]>
+		endif
+		if <argv[3]>==1
+			src.targetf <argv[2]>
+		else
+			src.<argv[2]>
+		endif
 	endif
 	sdialog d_house_commands
 
