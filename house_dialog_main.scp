@@ -4,7 +4,6 @@ page 0
 ref1=<src.ctag0.hs_sign> //sign
 ref2 = <ref1.link> // house
 ref3 = <ref2.owner> //owner
-ref4 = <ref2.region.uid>
 local.housetype=<ref2.housetype>
 if (<ref2.isowner <src>>) || (<src.isgm>)
 	local.owner=1
