@@ -21,11 +21,7 @@ endif
 if (<local.housetype>==<def.house_guild>)
 	ref5=<ref2.tag0.is_guild>
 	if <ref5.isvalid>
-		if !<isempty <ref5.abbrev>>
-			local.guild_name=[<ref5.abbrev>]
-		else
-			local.guild_name=<def.bfont_size1><ref5.name>
-		endif
+		local.guild_name=<qval <ref5.abbrev>?<def.bfont_size1><ref5.name>:[<ref5.abbrev>]>
 		local.guild=1
 		dhtmlgump 125 118 106 20 0 0 <def.center><local.guild_name>
 	endif
