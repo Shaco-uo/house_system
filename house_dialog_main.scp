@@ -12,19 +12,18 @@ elif (<ref2.GetCoownerPos <src>> >= 0)
 elif (<ref2.GetFriendPos <src>> >= 0)
 	local.friend=1
 endif
-
-fd_hs_bg 100,100
-dhtmlgump 125 134 106 60 0 0 <def.center><def.h3><def.bfont_size7><ref2.name>
-if <src.account.plevel> > 1
-	button 120 120 36 36 1 0 20006 // update dialog debug
-endif
 if (<local.housetype>==<def.house_guild>)
 	ref5=<ref2.tag0.is_guild>
 	if <ref5.isvalid>
 		local.guild_name=<qval <ref5.abbrev>?<def.bfont_size1><ref5.name>:[<ref5.abbrev>]>
 		local.guild=1
-		dhtmlgump 125 118 106 20 0 0 <def.center><local.guild_name>
 	endif
+endif
+
+fd_hs_bg 100,100
+dhtmlgump 125 134 106 60 0 0 <def.center><def.h3><def.bfont_size7><ref2.name>
+if (<local.guild>)
+	dhtmlgump 125 118 106 20 0 0 <def.center><local.guild_name>
 endif
 
 dorigin 100 91 // header buttons
@@ -147,9 +146,6 @@ ON=20001 20005 // HEADER BUTTONS
 	else
 		src.ctag.hs_menu=<dlocal.opt>
 	endif
-	sdialog d_house_menu
-
-ON=20006
 	sdialog d_house_menu
 
 // **********************************
