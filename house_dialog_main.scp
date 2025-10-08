@@ -128,7 +128,6 @@ ref2=<ref1.link>
 if !(<ref1.isvalid> && <ref2.isvalid>)
 	return 1
 endif
-serv.log @2,0,0 Pressed <dargn1>
 
 [DIALOG d_house_menu button]
 ON=0
