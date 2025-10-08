@@ -155,10 +155,6 @@ ON=20001 20005 // HEADER BUTTONS
 	sdialog d_house_menu
 
 ON=20006
-	src.ctag0.dlg_bg ++
-	if <src.dctag0.dlg_bg>==<ddef0.dlg_bg_max>
-		src.ctag.dlg_bg=
-	endif
 	sdialog d_house_menu
 
 // **********************************
