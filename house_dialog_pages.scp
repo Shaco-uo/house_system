@@ -659,13 +659,13 @@ else
 		gumppictiled +122 - 1 21 <ddef0.dialog_hs_div>
 		if (<local.owner> || <local.coowner>) && (<dlocal.opt>==1 || <dlocal.opt>==2)
 			if (<ref10>==<src>) || (<local.owner>)
-				if <argv[1]>
+				if <local.remove>
 					local.b=1
 					button +106 +2 22150 22152 1 0 <eval <dlocal._for>+4200> // remove
 				endif
 			endif
 		elif (<local.owner> || <local.coowner>) && (<dlocal.opt>==2 || <dlocal.opt>==3 || <dlocal.opt>==4)
-			if <argv[1]>
+			if <local.remove>
 				local.b=1
 				button +106 +2 22150 22152 1 0 <eval <dlocal._for>+4200> // remove
 			endif
