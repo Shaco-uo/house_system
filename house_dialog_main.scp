@@ -85,8 +85,8 @@ for 1 5
 	endif
 endfor
 
-dorigin 144 508 // bottom buttons
 if (<local.owner>) || (<local.coowner>) || (<local.friend>)
+	dorigin 144 508 // bottom buttons
 	dhtmlgump - - 150 20 0 0 <def.bfont_hs_text1><QVAL (<local.housetype>==<def.house_private>)?Grant Access:Banish>
 	button -37 -3 4005 4007 1 0 <QVAL (<local.housetype>==<def.house_private>)? 4022:4032>
 	dhtmlgump - *20 150 20 0 0 <def.bfont_hs_text1><QVAL (<local.housetype>==<def.house_private>)?Revoke Access:Lift a Ban>
