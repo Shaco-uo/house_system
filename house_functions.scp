@@ -395,80 +395,64 @@ sdialog d_house_menu
 
 
 [FUNCTION f_house_movecheck]
-ref2 = <argn>
-if !<ref2>
-	src.sysmessage @,,1 Invalid Target.
+ref1=<src.region.uid>
+ref2=<args>
+if !(<ref2.isvalid> && <ref2.isitem>)
 	return 1
-endif
-ref1 = <src.region.uid>
-if (<ref2>==<src.uid>) || (<ref2.isplayer>)
-	src.sysmessage @33,,1 You cannot move that.
-	return 1
-elif (<ref2.link>==<ref1>)
-	src.sysmessage @33,,1 You cannot move locked items.
-	return 1
-endif
-if (<ref2.topobj.ischar>)
-	src.sysmessage @33,,1 You cannot move items inside other containers.
-	return 1
-endif
-if (<ref2.region.uid> != <src.region.uid>)
+elif (<ref2.region.uid>!=<src.region.uid>)
 	src.sysmessage @33,,1 You cannot move items located outside the house.
 	return 1
+elif !((<ref2.isevent.ei_house_lockdown>) || (<ref2.isevent.ei_house_secure>))
+	src.sysmessage @33,,1 You can only move locked items.
+	return 1
+else
+	return 0
 endif
-return 0
+
 
 [FUNCTION f_house_moveN]
 if <f_house_movecheck <argo>>
 	return 1
 endif
 local.place = <argo.p>
-argo.removefromview
 argo.move 0,-1,0
-if (<argo.region.uid> != <src.region.uid>)
+if (<argo.region.uid>!=<src.region.uid>)
 	argo.p = <local.place>
 	src.sysmessage @33,,1 You cannot move items outside the house site.
 endif
-argo.update
 
 [FUNCTION f_house_moveS]
 if <f_house_movecheck <argo>>
 	return 1
 endif
 local.place = <argo.p>
-argo.removefromview
 argo.move 0,1,0
-if (<argo.region.uid> != <src.region.uid>)
+if (<argo.region.uid>!=<src.region.uid>)
 	argo.p = <local.place>
 	src.sysmessage @33,,1 You cannot move items outside the house site.
 endif
-argo.update
 
 [FUNCTION f_house_moveE]
 if <f_house_movecheck <argo>>
 	return 1
 endif
 local.place = <argo.p>
-argo.removefromview
 argo.move 1,0,0
-if (<argo.region.uid> != <src.region.uid>)
+if (<argo.region.uid>!=<src.region.uid>)
 	argo.p = <local.place>
 	src.sysmessage @33,,1 You cannot move items outside the house site.
 endif
-argo.update
 
 [FUNCTION f_house_moveW]
 if <f_house_movecheck <argo>>
 	return 1
 endif
 local.place = <argo.p>
-argo.removefromview
 argo.move -1,0,0
-if (<argo.region.uid> != <src.region.uid>)
+if (<argo.region.uid>!=<src.region.uid>)
 	argo.p = <local.place>
 	src.sysmessage @33,,1 You cannot move items outside the house site.
 endif
-argo.update
 
 [FUNCTION f_house_transfer]
 if !(<argo> && <argo.isplayer>)
