@@ -98,8 +98,8 @@ else
 	dhtmlgump - *20 180 20 0 0 <def.bfont_hs_gray>Add Friend
 	dhtmlgump - *20 180 20 0 0 <def.bfont_hs_gray>Remove Friend
 	dhtmlgump - *20 180 20 0 0 <def.bfont_hs_gray>Clear Friend List
-	dhtmlgump +200 *36 180 20 0 0 <def.bfont_hs_gray>View Ban List
-	dhtmlgump +200 *20 180 20 0 0 <def.bfont_hs_gray>Clear Ban List
+	dhtmlgump *174 *36 180 20 0 0 <def.bfont_hs_gray>View Ban List
+	dhtmlgump - *20 180 20 0 0 <def.bfont_hs_gray>Clear Ban List
 endif
 
 dorigin 160 456
