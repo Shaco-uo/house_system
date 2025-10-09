@@ -412,7 +412,7 @@ On=@HouseTraded
 	ref2=<link.owner>	//Old Owner
 	ref1.events=-e_house_transfer
 	ref2.events=-e_house_transfer
-	link.tag.lasttransfer=<f_return_todate <serv.rtime>>
+	link.tag.lasttransfer=<serv.rtime>
 	ref2.delhouse <uid>
 	link.owner=<ref1>
 	for <eval(<ref2.count>-1)> 0

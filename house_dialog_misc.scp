@@ -95,7 +95,7 @@ else
 endif
 ref2.tag.forsale=
 ref2.tag.price=
-ref2.tag.lasttransfer=<f_return_todate <serv.rtime>>
+ref2.tag.lasttransfer=<serv.rtime>
 ref1.resendtooltip 1,0
 src.sysmessage @,,1 You are now the owner of this property.
 src.sysmessage @,,1 This house is currently set to public (shop setting)

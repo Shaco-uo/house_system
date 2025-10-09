@@ -37,7 +37,7 @@ endif
 dorigin - *10
 if !<isempty <ref2.tag.lasttransfer>>
 	dhtmlgump - *20 100 20 0 0 <def.bfont_hs_text3>Last Traded:
-	dhtmlgump +100 - 120 20 0 0 <def.bfont_hs_text1><f_return_todate <ref1.dtag0.lasttransfer>>
+	dhtmlgump +100 - 120 20 0 0 <def.bfont_hs_text1><ref1.tag0.lasttransfer>
 endif
 if !<isempty <ref2.tag.buildon>>
 	dhtmlgump - *20 100 20 0 0 <def.bfont_hs_text3>Adquisition
